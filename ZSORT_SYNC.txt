@@ -1,0 +1,94 @@
+*&---------------------------------------------------------------------*
+*& Report  ZTEST13
+*&
+*&---------------------------------------------------------------------*
+*&
+*& Source system: QWA_214
+*&---------------------------------------------------------------------*
+
+REPORT zsort_sync.
+
+DATA : lv_no_of_elements      TYPE i,
+       lv_elemenet_size       TYPE i.
+
+DATA lt_array1 TYPE TABLE OF i.
+DATA lt_array2 TYPE TABLE OF i.
+DATA lv_arr1_done TYPE abap_bool.
+DATA lv_arr2_done TYPE abap_bool.
+
+DATA lv_exec1 TYPE tzntstmpl.
+DATA lv_exec2 TYPE tzntstmpl.
+
+DATA lv_timestamp1 TYPE timestampl.
+DATA lv_timestamp2 TYPE timestampl.
+
+DATA:
+   lo_ran TYPE REF TO cl_abap_random_int,
+   lv_i   TYPE i,
+   taskname TYPE string,
+   lv_seed TYPE i.
+
+
+lv_no_of_elements = 40000000. "no of elements
+lv_elemenet_size  = 1000000.  "size
+
+lv_seed = sy-timlo.
+lo_ran = cl_abap_random_int=>create( min = 0 max = lv_elemenet_size ).
+
+DO lv_no_of_elements TIMES.
+  lv_i = lo_ran->get_next( ).
+  APPEND lv_i TO lt_array1.
+ENDDO.
+
+
+lv_no_of_elements = 30000000.  "no of elements
+lv_elemenet_size  = 10000000.  "size
+
+lv_seed = sy-timlo.
+lo_ran = cl_abap_random_int=>create( min = 0 max = lv_elemenet_size ).
+
+DO lv_no_of_elements TIMES.
+  lv_i = lo_ran->get_next( ).
+  APPEND lv_i TO lt_array2.
+ENDDO.
+
+
+
+CLEAR : lv_exec1,
+        lv_arr1_done.
+taskname = 'task001'.
+
+GET TIME STAMP FIELD lv_timestamp1.
+
+CALL FUNCTION 'ZSORT'
+  EXPORTING
+    it_data = lt_array1
+  IMPORTING
+    ev_exec = lv_exec1  .
+
+
+CLEAR : lv_exec2,
+        lv_arr2_done.
+taskname = 'task002'.
+
+CALL FUNCTION 'ZSORT'
+  EXPORTING
+    it_data = lt_array2
+    IMPORTING
+    ev_exec = lv_exec2  .
+
+GET TIME STAMP FIELD lv_timestamp2.
+
+DATA(lv_seconds) = cl_abap_tstmp=>subtract(
+    EXPORTING
+      tstmp1 = lv_timestamp1
+      tstmp2 = lv_timestamp2 ).
+
+WRITE : 'Call 1 execution time is : ' , lv_exec1.
+SKIP 1.
+WRITE : 'Call 2 exceution time is : ' , lv_exec2.
+SKIP 1.
+WRITE : 'Total exceution time is : ' , lv_seconds.
+SKIP 1.
+DATA(lv_diff) = lv_exec2 + lv_exec1 - lv_seconds.
+WRITE : 'Time saved :', lv_diff .

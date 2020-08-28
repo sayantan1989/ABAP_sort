@@ -1,0 +1,32 @@
+FUNCTION zsort.
+*"----------------------------------------------------------------------
+*"*"Local Interface:
+*"  IMPORTING
+*"     VALUE(IT_DATA) TYPE  ZTT_DATA
+*"  EXPORTING
+*"     VALUE(EV_EXEC) TYPE  TZNTSTMPL
+*"     VALUE(EV_DONE) TYPE  BOOLEAN
+*"----------------------------------------------------------------------
+* Source system: QWA_214
+
+  "** sort number in async and return time taken to sort *"
+
+  DATA lv_timestamp1 TYPE timestampl.
+  DATA lv_timestamp2 TYPE timestampl.
+
+
+  GET TIME STAMP FIELD lv_timestamp1.
+  DATA(lt_data) = it_data.
+  SORT lt_data.
+  GET TIME STAMP FIELD lv_timestamp2.
+
+
+  DATA(lv_seconds) = cl_abap_tstmp=>subtract(
+      EXPORTING
+        tstmp1 = lv_timestamp1
+        tstmp2 = lv_timestamp2 ).
+
+  ev_exec = lv_seconds.
+  ev_done = abap_true.
+
+ENDFUNCTION.
